@@ -17,11 +17,13 @@
         "python310Packages.pip",
         "python310Packages.setuptools",
         "postgresql",
-        "gcc"
+        "postgresql.lib",
+        "gcc",
+        "libpqxx"
       ],
       "cmds": [
         "mkdir -p /app",
-        "apt-get update -y && apt-get install -y python3 python3-pip python3-setuptools"
+        "apt-get update -y && apt-get install -y python3 python3-pip python3-setuptools libpq-dev python3-dev gcc postgresql-client"
       ]
     },
     "install": {

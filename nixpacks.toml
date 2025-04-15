@@ -1,6 +1,7 @@
 [phases.setup]
 # Устанавливаем Python и нужные пакеты
-nixPkgs = ["python310", "python310Packages.pip", "python310Packages.setuptools", "postgresql", "gcc"]
+nixPkgs = ["python310", "python310Packages.pip", "python310Packages.setuptools", "postgresql", "postgresql.lib", "gcc", "libpqxx"]
+aptPkgs = ["libpq-dev", "python3-dev", "gcc", "postgresql-client"]
 
 [phases.install]
 # Установка зависимостей
