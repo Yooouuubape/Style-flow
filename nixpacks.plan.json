@@ -34,6 +34,6 @@
     }
   },
   "start": {
-    "cmd": "cd admin-dashboard && python3 -m gunicorn app:app"
+    "cmd": "bash -c 'cd admin-dashboard && python3 -m gunicorn app:app'"
   }
 } 

@@ -1,1 +1,1 @@
-web: cd admin-dashboard && python -m gunicorn app:app 
+web: bash -c 'cd admin-dashboard && python -m gunicorn app:app' 

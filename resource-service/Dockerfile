@@ -1,20 +1,31 @@
-FROM python:3.9-slim
-
-# Install build dependencies for confluent-kafka
-RUN apt-get update && apt-get install -y gcc librdkafka-dev
+FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+# Установка необходимых зависимостей
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    libpq-dev \
+    python3-dev \
+    gcc \
+    librdkafka-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копирование файлов требований
+COPY requirements.txt /app/
+
+# Установка зависимостей Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Копирование всего проекта
+COPY . /app/
 
-ENV PYTHONDONTWRITEBYTECODE=1
+# Указание переменных окружения
+ENV PORT=8003
 ENV PYTHONUNBUFFERED=1
-ENV FLASK_APP=app.py
-ENV FLASK_ENV=production
 
-EXPOSE 5003
+# Порт, на котором будет работать приложение
+EXPOSE 8003
 
-CMD ["python", "app.py"] 
+# Запуск приложения
+CMD ["python", "-m", "gunicorn", "app:app", "--bind", "0.0.0.0:8003"] 

@@ -11,7 +11,7 @@ cmds = [
 ]
 
 [start]
-cmd = "cd admin-dashboard && python -m gunicorn app:app"
+cmd = "bash -c 'cd admin-dashboard && python -m gunicorn app:app'"
 
 [variables]
 NIXPACKS_PYTHON_VERSION = "3.10"
