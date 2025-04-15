@@ -1,13 +1,17 @@
 [phases.setup]
-nixPkgs = ["python310", "postgresql", "gcc"]
+# Устанавливаем Python и нужные пакеты
+nixPkgs = ["python310", "python310Packages.pip", "python310Packages.setuptools", "postgresql", "gcc"]
 
 [phases.install]
+# Установка зависимостей
 cmds = [
-  "cd admin-dashboard && pip install -r requirements.txt"
+  "python -m pip install --upgrade pip",
+  "cd admin-dashboard && python -m pip install -r requirements.txt"
 ]
 
 [start]
-cmd = "cd admin-dashboard && gunicorn app:app"
+cmd = "cd admin-dashboard && python -m gunicorn app:app"
 
 [variables]
-NIXPACKS_PYTHON_VERSION = "3.10" 
+NIXPACKS_PYTHON_VERSION = "3.10"
+PATH = "/root/.local/bin:$PATH" 

@@ -7,9 +7,9 @@
     "python": "3.10.x"
   },
   "scripts": {
-    "start": "cd admin-dashboard && gunicorn app:app",
-    "build": "cd admin-dashboard && pip install -r requirements.txt",
-    "deploy": "cd admin-dashboard && gunicorn app:app"
+    "start": "cd admin-dashboard && python -m gunicorn app:app",
+    "build": "apt-get update -y && apt-get install -y python3 python3-pip python3-setuptools && python3 -m pip install --upgrade pip && cd admin-dashboard && python3 -m pip install -r requirements.txt",
+    "deploy": "cd admin-dashboard && python -m gunicorn app:app"
   },
   "cacheDirectories": [
     "admin-dashboard/node_modules"

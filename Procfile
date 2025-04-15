@@ -1,1 +1,1 @@
-web: cd admin-dashboard && gunicorn app:app 
+web: cd admin-dashboard && python -m gunicorn app:app 
