@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Данные таблиц | Style Flow Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Данные таблиц</h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-6">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Боковая панель с выбором сервиса и таблиц -->
+        <div class="col-span-1">
+            <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Выбор сервиса</h2>
+                <div class="mb-4">
+                    <label for="service-select" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Сервис</label>
+                    <select id="service-select" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
+                        {% for service in available_services %}
+                        <option value="{{ service.id }}" {% if service.id == service %}selected{% endif %}>{{ service.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button id="load-service-btn" class="w-full inline-flex justify-center items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:shadow-outline-blue transition ease-in-out duration-150 mb-6">
+                    <i class="fas fa-sync-alt mr-2"></i> Загрузить таблицы
+                </button>
+                
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Таблицы</h2>
+                <div class="space-y-2">
+                    {% if tables %}
+                        {% for table in tables %}
+                        <a href="{{ url_for('table_data', service=service, table=table) }}" class="flex items-center py-2 px-3 text-sm rounded-md w-full {% if table_name == table %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% else %}text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700{% endif %}">
+                            <i class="fas fa-table mr-2"></i>
+                            {{ table }}
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+                            <p>Нет доступных таблиц</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Основная область для отображения данных -->
+        <div class="col-span-1 md:col-span-3">
+            <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+                {% if not tables %}
+                    <div class="text-center py-10">
+                        <i class="fas fa-database text-5xl mb-4 text-gray-300 dark:text-gray-600"></i>
+                        <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-2">Выберите сервис</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Выберите сервис и загрузите список таблиц</p>
+                    </div>
+                {% elif not table_name %}
+                    <div class="text-center py-10">
+                        <i class="fas fa-table text-5xl mb-4 text-gray-300 dark:text-gray-600"></i>
+                        <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-2">Выберите таблицу</h3>
+                        <p class="text-gray-500 dark:text-gray-400">Выберите таблицу из списка слева для просмотра данных</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const serviceSelect = document.getElementById('service-select');
+        const loadBtn = document.getElementById('load-service-btn');
+        
+        loadBtn.addEventListener('click', function() {
+            const selectedService = serviceSelect.value;
+            window.location.href = "{{ url_for('tables') }}?service=" + selectedService;
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Управление базами данных | Style Flow Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Управление базами данных</h1>
+        <button data-modal-target="addDatabaseModal" data-modal-toggle="addDatabaseModal" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:shadow-outline-blue transition ease-in-out duration-150">
+            <i class="fas fa-plus mr-2"></i> Добавить базу данных
+        </button>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="p-4 mb-4 rounded-lg {% if message.type == 'success' %}bg-green-100 text-green-800{% elif message.type == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+            <div class="flex items-center">
+                <i class="fas {% if message.type == 'success' %}fa-check-circle{% elif message.type == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                <div>{{ message.text }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {% for db in databases %}
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="h-10 w-10 rounded-lg flex items-center justify-center bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ db.name }}</h3>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">{{ db.type }}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if db.status == 'online' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300{% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300{% endif %}">
+                            <i class="fas {% if db.status == 'online' %}fa-check-circle{% else %}fa-times-circle{% endif %} mr-1.5"></i>
+                            {{ db.status|capitalize }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Хост</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ db.host }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Порт</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ db.port }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Схемы</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ db.schema_count }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Размер</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ db.size }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <div>
+                        <a href="{{ url_for('database_details', db_id=db.id) }}" class="text-blue-600 hover:underline dark:text-blue-400">Подробнее</a>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button data-db-id="{{ db.id }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 toggle-db-status-btn" title="{% if db.status == 'online' %}Остановить{% else %}Запустить{% endif %}">
+                            <i class="fas {% if db.status == 'online' %}fa-stop-circle{% else %}fa-play-circle{% endif %}"></i>
+                        </button>
+                        <button data-db-id="{{ db.id }}" data-modal-target="editDatabaseModal-{{ db.id }}" data-modal-toggle="editDatabaseModal-{{ db.id }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" title="Редактировать">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button data-db-id="{{ db.id }}" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 delete-db-btn" title="Удалить">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно редактирования базы данных -->
+        <div id="editDatabaseModal-{{ db.id }}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-modal md:h-full">
+            <div class="relative w-full h-full max-w-2xl md:h-auto">
+                <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                    <div class="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                            Редактировать базу данных
+                        </h3>
+                        <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="editDatabaseModal-{{ db.id }}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form action="{{ url_for('edit_database', db_id=db.id) }}" method="POST" class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="name-{{ db.id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Имя базы данных</label>
+                                <input type="text" id="name-{{ db.id }}" name="name" value="{{ db.name }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label for="type-{{ db.id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Тип</label>
+                                <select id="type-{{ db.id }}" name="type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                                    <option value="postgres" {% if db.type == 'postgres' %}selected{% endif %}>PostgreSQL</option>
+                                    <option value="mysql" {% if db.type == 'mysql' %}selected{% endif %}>MySQL</option>
+                                    <option value="mongodb" {% if db.type == 'mongodb' %}selected{% endif %}>MongoDB</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="host-{{ db.id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Хост</label>
+                                <input type="text" id="host-{{ db.id }}" name="host" value="{{ db.host }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label for="port-{{ db.id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Порт</label>
+                                <input type="number" id="port-{{ db.id }}" name="port" value="{{ db.port }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="username-{{ db.id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Имя пользователя</label>
+                                <input type="text" id="username-{{ db.id }}" name="username" value="{{ db.username }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label for="password-{{ db.id }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Пароль</label>
+                                <input type="password" id="password-{{ db.id }}" name="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Оставьте пустым, чтобы сохранить текущий пароль</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-end pt-4 border-t border-gray-200 dark:border-gray-600">
+                            <button type="button" class="mr-2 px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600" data-modal-hide="editDatabaseModal-{{ db.id }}">Отмена</button>
+                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not databases %}
+        <div class="col-span-1 md:col-span-2 lg:col-span-3">
+            <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-8">
+                <div class="text-center">
+                    <i class="fas fa-database text-5xl mb-4 text-gray-300 dark:text-gray-600"></i>
+                    <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-2">Нет баз данных</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-4">Добавьте новую базу данных для начала работы</p>
+                    <button data-modal-target="addDatabaseModal" data-modal-toggle="addDatabaseModal" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:shadow-outline-blue transition ease-in-out duration-150">
+                        <i class="fas fa-plus mr-2"></i> Добавить базу данных
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно добавления базы данных -->
+<div id="addDatabaseModal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-modal md:h-full">
+    <div class="relative w-full h-full max-w-2xl md:h-auto">
+        <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+            <div class="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Добавить новую базу данных
+                </h3>
+                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="addDatabaseModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form action="{{ url_for('add_database') }}" method="POST" class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Имя базы данных</label>
+                        <input type="text" id="name" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="auth_service_db" required>
+                    </div>
+                    <div>
+                        <label for="type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Тип</label>
+                        <select id="type" name="type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required>
+                            <option value="" disabled selected>Выберите тип БД</option>
+                            <option value="postgres">PostgreSQL</option>
+                            <option value="mysql">MySQL</option>
+                            <option value="mongodb">MongoDB</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="host" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Хост</label>
+                        <input type="text" id="host" name="host" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="localhost" required>
+                    </div>
+                    <div>
+                        <label for="port" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Порт</label>
+                        <input type="number" id="port" name="port" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="5432" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="username" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Имя пользователя</label>
+                        <input type="text" id="username" name="username" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="postgres" required>
+                    </div>
+                    <div>
+                        <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Пароль</label>
+                        <input type="password" id="password" name="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="••••••••" required>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <button type="button" class="mr-2 px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600" data-modal-hide="addDatabaseModal">Отмена</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработчики событий для кнопок управления базами данных
+        const toggleDbStatusBtns = document.querySelectorAll('.toggle-db-status-btn');
+        const deleteDbBtns = document.querySelectorAll('.delete-db-btn');
+
+        toggleDbStatusBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const dbId = this.getAttribute('data-db-id');
+                // Отправка запроса на изменение статуса базы данных
+                fetch(`/databases/${dbId}/toggle-status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrf_token')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Ошибка при изменении статуса базы данных: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Произошла ошибка при обработке запроса');
+                });
+            });
+        });
+
+        deleteDbBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (confirm('Вы уверены, что хотите удалить эту базу данных? Это действие нельзя отменить.')) {
+                    const dbId = this.getAttribute('data-db-id');
+                    // Отправка запроса на удаление базы данных
+                    fetch(`/databases/${dbId}/delete`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrf_token')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Ошибка при удалении базы данных: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                        alert('Произошла ошибка при обработке запроса');
+                    });
+                }
+            });
+        });
+
+        // Вспомогательная функция для получения значения cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %} 

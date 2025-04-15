@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}База данных {{ database.name }} | Style Flow Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ database.name }}</h1>
+            <p class="text-gray-500 dark:text-gray-400">{{ database.type|upper }} Database</p>
+        </div>
+        <a href="{{ url_for('databases') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-800 focus:outline-none focus:border-gray-800 focus:shadow-outline-gray transition ease-in-out duration-150">
+            <i class="fas fa-arrow-left mr-2"></i> Назад
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-6">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <!-- Общая информация -->
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Общая информация</h3>
+            </div>
+            <div class="p-5">
+                <div class="flex items-center mb-4">
+                    <span class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 mr-3">
+                        <i class="fas fa-database"></i>
+                    </span>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Статус</p>
+                        <p class="text-sm font-semibold {% if database.status == 'online' %}text-green-500{% else %}text-red-500{% endif %}">
+                            <i class="fas {% if database.status == 'online' %}fa-check-circle{% else %}fa-times-circle{% endif %} mr-1"></i>
+                            {{ database.status|capitalize }}
+                        </p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Тип</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ database.type|upper }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Размер</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ database.size }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Хост</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ database.host }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Порт</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ database.port }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Пользователь</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ database.username }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Создана</p>
+                        <p class="text-sm text-gray-900 dark:text-white">{{ database.created_at.strftime('%d.%m.%Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Связанные сервисы -->
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden md:col-span-2">
+            <div class="p-4 bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Связанные сервисы</h3>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for service in database.services %}
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <div class="flex items-start">
+                            <div class="h-10 w-10 rounded-lg flex items-center justify-center bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 mr-3">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ service.name }}</h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ service.url }}:{{ service.port }}</p>
+                                <span class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {% if service.active %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300{% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300{% endif %}">
+                                    {{ 'Активен' if service.active else 'Не активен' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-8 text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-server text-4xl mb-4 opacity-30"></i>
+                        <p>Нет сервисов, использующих эту базу данных</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Схемы и таблицы -->
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+        <div class="p-4 bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Схемы и таблицы</h3>
+        </div>
+        <div class="p-5">
+            {% if schemas %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for schema in schemas %}
+                    <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <div class="h-8 w-8 rounded-lg flex items-center justify-center bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 mr-2">
+                                <i class="fas fa-table"></i>
+                            </div>
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ schema.name }}</h4>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400">Таблиц</p>
+                                <p class="text-gray-900 dark:text-white font-medium">{{ schema.table_count }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400">Размер</p>
+                                <p class="text-gray-900 dark:text-white font-medium">{{ schema.size }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-table text-4xl mb-4 opacity-30"></i>
+                    <p>Нет доступных схем</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно выполнения SQL запроса -->
+<div id="sqlQueryModal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full flex items-center justify-center bg-gray-900 bg-opacity-50">
+    <div class="relative w-full h-full max-w-4xl md:h-auto">
+        <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+            <div class="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Выполнить SQL запрос
+                </h3>
+                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="sqlQueryModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="sqlQueryForm" method="POST" class="p-6">
+                <div class="mb-4">
+                    <label for="sql-query" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">SQL запрос</label>
+                    <textarea id="sql-query" name="query" rows="6" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="SELECT * FROM users LIMIT 10;" required></textarea>
+                </div>
+                <div class="flex items-center justify-end pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <button type="button" class="mr-2 px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600" data-modal-hide="sqlQueryModal">Отмена</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">Выполнить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация модальных окон
+        const modals = document.querySelectorAll('[data-modal-toggle]');
+        modals.forEach(button => {
+            const modalId = button.getAttribute('data-modal-toggle');
+            const modalElement = document.getElementById(modalId);
+            
+            if (modalElement) {
+                button.addEventListener('click', function() {
+                    modalElement.classList.toggle('hidden');
+                    modalElement.setAttribute('aria-hidden', modalElement.classList.contains('hidden'));
+                });
+                
+                // Закрытие модального окна
+                const closeButtons = modalElement.querySelectorAll('[data-modal-hide]');
+                closeButtons.forEach(closeBtn => {
+                    closeBtn.addEventListener('click', function() {
+                        modalElement.classList.add('hidden');
+                        modalElement.setAttribute('aria-hidden', 'true');
+                    });
+                });
+            }
+        });
+    });
+</script>
+{% endblock %} 

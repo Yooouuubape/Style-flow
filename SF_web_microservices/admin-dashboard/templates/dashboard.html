@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Панель управления | Style Flow Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-500 bg-opacity-10">
+                    <i class="fas fa-server text-blue-500 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Микросервисы</h3>
+                    <div class="flex items-end">
+                        <span class="text-2xl font-semibold text-gray-700 dark:text-white">{{ services|length }}</span>
+                        <span class="text-green-500 text-sm ml-2">активно</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-500 bg-opacity-10">
+                    <i class="fas fa-key text-green-500 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">API ключи</h3>
+                    <div class="flex items-end">
+                        <span class="text-2xl font-semibold text-gray-700 dark:text-white">{{ api_keys|length }}</span>
+                        <span class="text-green-500 text-sm ml-2">активно</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-500 bg-opacity-10">
+                    <i class="fas fa-database text-purple-500 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Базы данных</h3>
+                    <div class="flex items-end">
+                        <span class="text-2xl font-semibold text-gray-700 dark:text-white">{{ databases|length }}</span>
+                        <span class="text-green-500 text-sm ml-2">доступно</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-medium text-gray-800 dark:text-white">Статус микросервисов</h2>
+            </div>
+            <div class="p-6">
+                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for service in services %}
+                    <li class="py-4 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="h-2 w-2 rounded-full {{ 'bg-green-500' if service.active else 'bg-red-500' }}"></span>
+                            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-200">{{ service.name }}</span>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full {{ 'bg-green-100 text-green-800' if service.active else 'bg-red-100 text-red-800' }}">
+                            {{ 'Активен' if service.active else 'Не активен' }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-medium text-gray-800 dark:text-white">Последние API ключи</h2>
+            </div>
+            <div class="p-6">
+                {% if api_keys %}
+                <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for key in api_keys[:5] %}
+                    <li class="py-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-200">{{ key.name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Создан: {{ key.created_at.strftime('%d.%m.%Y') }}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <span class="px-2 py-1 text-xs rounded-full {{ 'bg-green-100 text-green-800' if key.active else 'bg-red-100 text-red-800' }}">
+                                    {{ 'Активен' if key.active else 'Не активен' }}
+                                </span>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-gray-500 dark:text-gray-400">Нет созданных API ключей</p>
+                    <a href="{{ url_for('api_keys') }}" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i> Создать ключ
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}API Ключи | Style Flow Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Управление API ключами</h1>
+        <button data-modal-target="addApiKeyModal" data-modal-toggle="addApiKeyModal" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:shadow-outline-blue transition ease-in-out duration-150">
+            <i class="fas fa-plus mr-2"></i> Добавить API ключ
+        </button>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-6">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Имя</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ключ</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Статус</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Сервисы</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for key in api_keys %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ key.name }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Создан: {{ key.created_at.strftime('%d.%m.%Y') }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ key.key[:8] }}...</div>
+                            <button onclick="copyToClipboard('{{ key.key }}')" class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400">Копировать</button>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {% if key.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ 'Активен' if key.is_active else 'Не активен' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                {% set allowed = key.get_allowed_services() %}
+                                {% if allowed|length > 0 %}
+                                    {% for service in allowed %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1 mb-1">
+                                            {{ service }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    Все сервисы
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <form action="{{ url_for('toggle_api_key', key_id=key.id) }}" method="post" class="inline">
+                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                        {% if key.is_active %}
+                                        <i class="fas fa-toggle-on" title="Деактивировать"></i>
+                                        {% else %}
+                                        <i class="fas fa-toggle-off" title="Активировать"></i>
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                <form action="{{ url_for('delete_api_key', key_id=key.id) }}" method="post" class="inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот API ключ?');">
+                                    <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                                        <i class="fas fa-trash-alt" title="Удалить"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    {% if not api_keys %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <div class="text-center">
+                                <i class="fas fa-key text-4xl mb-4 opacity-30"></i>
+                                <p>Нет добавленных API ключей</p>
+                                <button data-modal-target="addApiKeyModal" data-modal-toggle="addApiKeyModal" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:border-blue-800 focus:shadow-outline-blue transition ease-in-out duration-150">
+                                    <i class="fas fa-plus mr-2"></i> Добавить API ключ
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления API ключа -->
+<div id="addApiKeyModal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full flex items-center justify-center bg-gray-900 bg-opacity-50">
+    <div class="relative w-full h-full max-w-2xl md:h-auto">
+        <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+            <div class="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Добавить новый API ключ
+                </h3>
+                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="addApiKeyModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form action="{{ url_for('api_keys') }}" method="POST" class="p-6">
+                <div class="mb-4">
+                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Название ключа</label>
+                    <input type="text" id="name" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Например: Mobile App" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Доступные сервисы</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {% for service in available_services %}
+                        <div class="flex items-center">
+                            <input id="service-{{ service.id }}" type="checkbox" name="services" value="{{ service.id }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <label for="service-{{ service.id }}" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{ service.name }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Если ничего не выбрано, ключ будет иметь доступ ко всем сервисам</p>
+                </div>
+
+                <div class="flex items-center justify-end pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <button type="button" class="mr-2 px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600" data-modal-hide="addApiKeyModal">Отмена</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация модальных окон
+        const modals = document.querySelectorAll('[data-modal-toggle]');
+        modals.forEach(button => {
+            const modalId = button.getAttribute('data-modal-toggle');
+            const modalElement = document.getElementById(modalId);
+            
+            if (modalElement) {
+                button.addEventListener('click', function() {
+                    modalElement.classList.toggle('hidden');
+                    modalElement.setAttribute('aria-hidden', modalElement.classList.contains('hidden'));
+                });
+                
+                // Закрытие модального окна
+                const closeButtons = modalElement.querySelectorAll('[data-modal-hide]');
+                closeButtons.forEach(closeBtn => {
+                    closeBtn.addEventListener('click', function() {
+                        modalElement.classList.add('hidden');
+                        modalElement.setAttribute('aria-hidden', 'true');
+                    });
+                });
+            }
+        });
+        
+        // Функция копирования в буфер обмена
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('API ключ скопирован в буфер обмена');
+            }, function() {
+                alert('Не удалось скопировать API ключ');
+            });
+        }
+        
+        // Назначаем обработчики для кнопок копирования
+        const copyButtons = document.querySelectorAll('.copy-api-key');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const apiKey = this.getAttribute('data-key');
+                copyToClipboard(apiKey);
+            });
+        });
+    });
+
+    // Глобальная функция для копирования
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function() {
+            alert('API ключ скопирован в буфер обмена');
+        }, function() {
+            alert('Не удалось скопировать API ключ');
+        });
+    }
+</script>
+{% endblock %} 
