@@ -1,0 +1,1 @@
+web: cd admin-dashboard && gunicorn app:app 
