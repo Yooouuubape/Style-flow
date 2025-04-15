@@ -1,0 +1,12 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cd admin-dashboard && pip install -r requirements.txt"
+
+[deploy]
+startCommand = "cd admin-dashboard && gunicorn app:app"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+
+[nixpacks]
+provider = "python" 

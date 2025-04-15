@@ -1,0 +1,9 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "cd admin-dashboard && gunicorn app:app"
+restartPolicyType = "ON_FAILURE"
+
+[nixpacks]
+plan-path = "nixpacks.plan.json" 

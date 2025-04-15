@@ -1,0 +1,18 @@
+{
+  "name": "admin-dashboard",
+  "version": "1.0.0",
+  "description": "Admin Dashboard for Style Flow Microservices",
+  "engines": {
+    "node": ">=14.0.0",
+    "python": "3.10.x"
+  },
+  "scripts": {
+    "start": "cd admin-dashboard && gunicorn app:app",
+    "build": "cd admin-dashboard && pip install -r requirements.txt",
+    "deploy": "cd admin-dashboard && gunicorn app:app"
+  },
+  "cacheDirectories": [
+    "admin-dashboard/node_modules"
+  ],
+  "dependencies": {}
+} 
