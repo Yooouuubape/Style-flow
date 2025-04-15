@@ -4,7 +4,7 @@ buildCommand = "apt-get update -y && apt-get install -y python3-pip libpq-dev gc
 
 [deploy]
 startCommand = "python -m gunicorn app:app --bind 0.0.0.0:$PORT"
-healthcheckPath = "/health"
+healthcheckPath = "/"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
 
